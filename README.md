@@ -1,0 +1,2 @@
+# genai-hackathon
+Hackathon Project.
