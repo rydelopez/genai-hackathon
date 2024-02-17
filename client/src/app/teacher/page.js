@@ -1,79 +1,105 @@
 'use client';
 
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
-import Chart from './chart';
+import { Upload } from 'react-feather';
+import FileUpload from './upload';
+import { useEffect } from 'react';
+import FileList from './files';
+import { useState } from 'react';
+import React from 'react'
+import Select from "react-select";
 
-const website = [
-    { name: '/home', value: 1230 },
-    { name: '/contact', value: 751 },
-    { name: '/gallery', value: 471 },
-    { name: '/august-discount-offer', value: 280 },
-    { name: '/case-studies', value: 78 }
-];
 
-const shop = [
-    { name: '/home', value: 453 },
-    { name: '/imprint', value: 351 },
-    { name: '/shop', value: 271 },
-    { name: '/pricing', value: 191 }
-];
 
-const app = [
-    { name: '/shop', value: 789 },
-    { name: '/product-features', value: 676 },
-    { name: '/about', value: 564 },
-    { name: '/login', value: 234 },
-    { name: '/downloads', value: 191 }
-];
+  
+  
 
-const data = [
-    {
-        category: 'Website',
-        stat: '10,234',
-        data: website
-    },
-    {
-        category: 'Online Shop',
-        stat: '12,543',
-        data: shop
-    },
-    {
-        category: 'Mobile App',
-        stat: '2,543',
-        data: app
-    }
-];
 
-export default function Dashboard() {
+
+
+export default function Teacher() {
+
+    const [files, setFiles] = useState([
+    ]);
+
+    const [lesson, setLesson] = useState({label: "", value: 1});
+    const [name, setName] = useState("");
+
+    const [conversations, setConversations] = useState([
+    ]);
+
+
+
+    const updateFiles = async() => {
+        const response = await fetch(`http://localhost:3500/lesson/${lesson.value}`
+        ).then((res) => res.json());
+        setFiles(response.uploads);
+    };
+
+    const setConvos = async() => {
+        const response = await fetch(`http://localhost:3500/lessons/${lesson.value}`
+        ).then((res) => res.json());
+        setConversations(response);
+    };
+
+    useEffect(() => {
+        updateFiles();
+        setConvos();
+    }, []);
+
+    useEffect(() => {
+        updateFiles();
+    }, [lesson]);
+
+
+    const handleSubmit = async() => {
+        
+        const response = await fetch(`http://localhost:3500/lesson?instructor_id=${1}&description=${name}`, {
+            method: "POST"
+           
+        }
+        ).then((res) => res.json());
+        setName(name);
+        setLesson({"value": response.id, "label": name});
+        setConversations([...conversations, {value: response.id, label: name}])
+    };
+
+
+    const handleDelete = async(fileName) => {
+        setFiles(files.filter(file => file.name !== fileName));
+        const response = await fetch(`http://localhost:3500/lesson/${1}`
+        ).then((res) => res.json());
+        
+    };
+
+    
     return (
-        <main className="p-4 md:p-10 mx-auto max-w-7xl">
-            <Grid numItemsSm={2} numItemsLg={3} className="gap-6">
-                {data.map((item) => (
-                    <Card key={item.category}>
-                        <Title>{item.category}</Title>
-                        <Flex
-                            justifyContent="start"
-                            alignItems="baseline"
-                            className="space-x-2"
-                        >
-                            <Metric>{item.stat}</Metric>
-                            <Text>Total views</Text>
-                        </Flex>
-                        <Flex className="mt-6">
-                            <Text>Pages</Text>
-                            <Text className="text-right">Views</Text>
-                        </Flex>
-                        <BarList
-                            data={item.data}
-                            valueFormatter={(number) =>
-                                Intl.NumberFormat('us').format(number).toString()
-                            }
-                            className="mt-2"
-                        />
-                    </Card>
-                ))}
-            </Grid>
-            <Chart />
-        </main>
+        <>
+
+        <>
+        <>
+        <Select
+        defaultValue={lesson}
+        onChange={setLesson}
+        options={conversations}
+      />
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%' }}>
+        <h2>Create Lesson</h2>
+        <div>
+        <label>Name:</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <button onClick={handleSubmit}>Submit</button>
+      </div>
+      </>
+        <FileUpload lesson_id={lesson.value} setFiles={setFiles} updateFiles={updateFiles}/>
+        
+        </>
+        
+        <FileList files={files} onDelete={handleDelete} />
+        
+        </>
     );
 }
+
+

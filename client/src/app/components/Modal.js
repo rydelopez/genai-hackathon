@@ -18,12 +18,12 @@ export default function UserPicker({ searchParams }) {
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "authenticated") {
-            const userExists = fetch(`${process.env.URL}/user/${session.user.email}`).then((res) => res.json()).then((data) => data.length > 0);
-            if (searchParams["new"] === "1" && !userExists) {
+        // if (status === "authenticated") {
+        //     const userExists = fetch(`${process.env.URL}/user/${session.user.email}`).then((res) => res.json()).then((data) => data.length > 0);
+            if (searchParams["new"] === "1") {
                 onOpen();
             }
-        }
+        // }
     }, [searchParams]);
 
     useEffect(() => {
