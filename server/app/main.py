@@ -8,12 +8,9 @@ import os
 from fastapi import FastAPI, Request
 from celery import Celery
 
-from app.src.routers import conversation
-from app.src.routers import stats
 from . import models
 from app.database import SessionLocal, engine
-from app.src.routers import teacher
-from app.src.routers import parent
+from app.src.routers import conversation, parent, stats, teacher, student
 
 OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
 
@@ -23,37 +20,29 @@ REDIS_URL = os.environ.get("REDIS_URL")
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
+
+# Middleware first
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routes
 app.include_router(conversation.router)
 app.include_router(stats.router)
 app.include_router(teacher.router)
 app.include_router(parent.router)
+app.include_router(student.router)
 
 # Create the celery instance
 celery_app = Celery("main_celery_app", broker=REDIS_URL)
-
-origins = [
-    "http://localhost:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-origins = [
-    "http://localhost:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # Base route

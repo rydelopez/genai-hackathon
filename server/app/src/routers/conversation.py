@@ -15,7 +15,7 @@ weaviate_connector = WeaviateVDB()
 from app.src.llm.openai_llm import OpenAILLM
 
 
-#function for handling chat input
+# Function for handling chat input
 @router.post("/chatbot")
 async def chatbot(
     client_message: Message

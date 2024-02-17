@@ -28,7 +28,7 @@ def create_parent(model: ParentRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Instructor not found")
     
     # Create a new parent instance. This also creates a User due to inheritance.
-    new_parent = Parent(name=model.name, email=model.email, child_name=model.child_name, child_age=child_age, instructor_id=instructor_id, type="parent")
+    new_parent = Parent(name=model.name, email=model.email, child_name=model.child_name, child_age=model.child_age, instructor_id=model.instructor_id, type="parent")
     db.add(new_parent)
     db.commit()
     db.refresh(new_parent)

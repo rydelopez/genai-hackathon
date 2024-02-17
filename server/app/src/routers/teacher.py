@@ -79,7 +79,7 @@ async def upload_pdf_doc(uploaded_file: UploadFile, lesson_id: int, db: Session 
     db.add(new_document)
     db.commit()
 
-    celery_app.send_task("app.tasks.ingest_document", args=[file_location, str(new_document.id)], queue="vdb")
+    celery_app.send_task("app.tasks.ingest_document", args=[file_location, str(new_document.id)], queue="celery")
     return {"filename": uploaded_file.filename}
 
 

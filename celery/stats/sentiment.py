@@ -1,6 +1,10 @@
 from enum import Enum, auto
 from collections import Counter
 
+from transformers import pipeline
+
+from schema.conversation import ChatSession
+
 
 SENTIMENT_MODEL_NAME = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 
@@ -11,12 +15,14 @@ class Sentiment(Enum):
     NEGATIVE = auto()
 
 
-distilled_student_sentiment_classifier = pipeline(
-    model=SENTIMENT_MODEL_NAME, 
-    return_all_scores=True
-)
+
 
 def measure_sentiment(student_text: str) -> Sentiment:
+    distilled_student_sentiment_classifier = pipeline(
+        model=SENTIMENT_MODEL_NAME, 
+        return_all_scores=True
+    )
+
     sentiment_label_scores = distilled_student_sentiment_classifier(student_text)[0]
 
     # Get the label with the highest score

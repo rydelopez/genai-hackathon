@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code/celery
 COPY ./requirements.txt /code/celery/requirements.txt
 
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y
 RUN pip install --no-cache-dir --upgrade -r /code/celery/requirements.txt
 
 COPY ./app /code/celery/app

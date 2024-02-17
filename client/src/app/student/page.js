@@ -42,9 +42,12 @@ function AudioRecorderButton() {
     if (!audioData) return;
 
     const formData = new FormData();
-    formData.append('audio', audioData, 'student_recording.webm');
+    const randomId = self.crypto.randomUUID();
+    formData.append('audio', audioData, `student-recording-${randomId}.webm`);
+    // formData.append('student_id', '123');
 
     try {
+      console.log('making a post request to backend');
       const response = await fetch('http://localhost:3500/student/chat', {
         method: 'POST',
         body: formData,
@@ -59,9 +62,11 @@ function AudioRecorderButton() {
 
   const toggleRecording = () => {
     if (isRecording) {
+      console.log('stopped recording.');
       stopRecording();
       sendAudioToServer();
     } else {
+      console.log('recording...');
       startRecording();
     }
   };
