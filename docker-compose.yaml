@@ -35,15 +35,15 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres:/var/lib/postgresql/pgdata
-  vdb:
-    build: ./vdb
+  celery:
+    build: ./celery
     environment:
       - REDIS_URL=redis://redis:6379
       - WEAVIATE_URL=http://weaviate:8080
     networks:
       - hackathon
     volumes:
-      - ./vdb:/code/vdb
+      - ./celery:/code/celery
       - shared_data:/code/shared_data
   weaviate:
     command:
