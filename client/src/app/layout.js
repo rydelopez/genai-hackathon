@@ -19,8 +19,8 @@ export default function RootLayout({ children }) {
           <Suspense>
             <Nav />
           </Suspense>
+          {children}
         </Providers>
-        {children}
       </body>
     </html>
   );
