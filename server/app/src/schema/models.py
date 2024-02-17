@@ -16,6 +16,9 @@ class Instructor(User):
     id = Column(Integer, primary_key=True)
     grade = Column(Integer)
 
+    lessons = relationship("Lesson", backref="instructor")
+    students = relationship("Parent", backref="instructor")
+
 class Parent(User):
     __tablename__ = "parents"
 
@@ -24,12 +27,17 @@ class Parent(User):
     child_age = Column(Integer)
     instructor_id = Column(Integer, ForeignKey("instructors.id"))
 
+    conversations = relationship("Conversation", backref="parent")
+
 class Lesson(Base):
     __tablename__ = "lessons"
 
     id = Column(Integer, primary_key=True)
     instructor_id = Column(Integer, ForeignKey("instructors.id"))
     description = Column(String)
+
+    concepts = relationship("Concept", backref="lesson")
+    documents = relationship("Document", backref="lesson")
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -45,12 +53,17 @@ class Conversation(Base):
     language_complexity = Column(Integer)
     sentiment = Column(PickleType)
 
+    concept_focuses = relationship("ConversationConceptFocus", backref="conversation")
+    questions = relationship("QuestionResponse", backref="conversation")
+
 class Subject(Base):
     __tablename__ = "subjects"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     description = Column(String)
+
+    concepts = relationship("Concept", backref="subject")
 
 class Concept(Base):
     __tablename__ = "concepts"
@@ -77,3 +90,12 @@ class QuestionResponse(Base):
     concept_id = Column(Integer, ForeignKey("concepts.id"))
     accuracy = Column(Integer)
     reasoning = Column(String)
+
+# NOTE: might need to define relationship from concept to conversationconceptfocuses and questionresponses
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    lesson_id = Column(Integer, ForeignKey("documents.id"))
