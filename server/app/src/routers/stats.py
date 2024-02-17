@@ -10,6 +10,7 @@ from celery import Celery
 from app.src.schema.stats import FirstPageStats
 from app.src.schema.stats import SecondPageStats
 from app.models import QuestionResponse
+from app.src.schema.stats import QA
 
 REDIS_URL = os.environ.get("REDIS_URL")
 upload_folder = "/code/shared_data"
@@ -37,12 +38,24 @@ async def get_conversation_stats(conversation_id: int, db: Session = Depends(get
     unique_words = conversation.unique_words
     response_time = conversation.average_response_time
     q_and_a = (
-        db.query(QuestionResponse).filter(QuestionResponse.id == conversation_id).all()
+        db.query(QuestionResponse)
+        .filter(QuestionResponse.conversation_id == conversation_id)
+        .all()
     )
+    qas = []
+    for qa in q_and_a:
+        qas.append(
+            QA(
+                question=qa.question,
+                answer=qa.answer,
+                ranking=qa.accuracy,
+                reasoning=qa.reasoning,
+            )
+        )
 
     return SecondPageStats(
         avg_response_length=avg_response_length,
         unique_words=unique_words,
         response_time=response_time,
-        q_and_a=q_and_a,
+        q_and_a=qas,
     )
