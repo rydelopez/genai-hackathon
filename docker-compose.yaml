@@ -22,7 +22,7 @@ services:
       - 6379:6379
     networks:
       - hackathon
-  postgres:
+  db:
     image: postgres
     command: postgres
     networks:
@@ -35,6 +35,18 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres:/var/lib/postgresql/pgdata
+  celery_beat:
+    build: ./server
+    command: /start-celerybeat
+    depends_on:
+      - redis
+      - db
+  celery_worker:
+    build: ./server 
+    command: /start-celeryworker
+    depends_on:
+      - redis
+      - db
   vdb:
     build: ./vdb
     environment:
