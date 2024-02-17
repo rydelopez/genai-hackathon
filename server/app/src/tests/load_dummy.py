@@ -31,13 +31,13 @@ def load_dummy_data():
 
     try:
         new_instructor = Instructor(
-            name="Instructor", email="bewill10@gmail.com", grade="8", type="instructor"
+            name="Instructor", email="bewill12@gmail.com", grade="8", type="instructor"
         )
         db.add(new_instructor)
         db.commit()
         new_parent = Parent(
             name="Instructor",
-            email="bewill11@gmail.com",
+            email="bewill13@gmail.com",
             child_name="bruh",
             child_age=4,
             instructor_id=new_instructor.id,
