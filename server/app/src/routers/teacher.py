@@ -55,6 +55,15 @@ async def get_lesson(lesson_id: int, db: Session = Depends(get_db)):
     uploads = [{"name": document.name, "document_id": document.id} for document in lesson.documents]
     return {"uploads": uploads}
 
+# Get uploaded docs from lesson plan
+@router.get("/lessons/{instructor_id}")
+async def get_lesson(instructor_id: int, db: Session = Depends(get_db)):
+    lesson = db.query(Lesson).filter(Lesson.instructor_id == instructor_id).all()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    uploads = [{"label": l.description, "value": l.id} for l in lesson]
+    return uploads
+
 
 # Delete documents from lesson plan
 @router.delete("/lesson/doc/{document_id}")
