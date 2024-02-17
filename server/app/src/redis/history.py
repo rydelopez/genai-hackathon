@@ -1,15 +1,29 @@
 # JSON caching methods
 import json
+from datetime import datetime
 
+
+# Redis Schema
+# Type 1: Current Conversation
+# Key: conversation:{parent_id}
+# Value: []
+
+# Key: metadata:{parent_id}
+# Value: {num_questions: int, unique_words: set, total_response_time: int, start_time: datetime, last_time: datetime}
+
+# Key: wordset:{parent_id}
+# Value: wordset
 
 class ConversationHistory:
     ALLOWED_MESSAGE_TYPES = ["user", "assistant", "system"]
+    DUMMY_VALUE = "dummy"
+    EXPIRED_BUFFER = 10 * 60000
 
     def __init__(self, redis_client):
         """Initialize our conversation history with a Redis cache"""
         self.client = redis_client
 
-    async def append_message(self, conversation_id, message_type, message_contents):
+    async def append_message(self, parent_id, message_type, message_contents, response_time=0):
         """
         Appends a message to a list of back-and-forth messages in a conversation
 
@@ -27,21 +41,87 @@ class ConversationHistory:
         message_json = json.dumps(message)
 
         # assuming this conversation history is a redis list
-        # assuming these structures have formats of key "conversation:{conversation_id}"
-        redis_key = f"conversation:{conversation_id}"
+        # assuming these structures have formats of key "conversation:{parent_id}"
+        redis_key = f"conversation:{parent_id}"
         await self.client.rpush(redis_key, message_json)
+        await self.update_metadata(parent_id, message_type, message_contents, response_time)
         return {
-            "msg": f"Message {message_contents} of type {message_type} appended to conversation {conversation_id}"
+            "msg": f"Message {message_contents} of type {message_type} appended to conversation {parent_id}."
         }
 
-    async def get_history(self, conversation_id) -> list[dict[str, str]]:
+    async def update_metadata(self, parent_id, message_type, message_contents, response_time):
+        metadata_key = f"metadata:{parent_id}"
+        wordset_key = f"wordset:{parent_id}"
+        stopwords_key = f"stopwords"
+        time = datetime.now()
+        metadata = await self.client.get(metadata_key)
+
+        if message_type == "user":
+            metadata["num_questions"] += 1
+            metadata["total_response_time"] += response_time
+            cleaned_words = []
+            for word in message_contents:
+                if not self.client.sismember(stopwords_key, word):
+                    cleaned_words.append(word)
+            self.client.sadd(wordset_key, cleaned_words)
+        
+        if metadata["start_time"] is None:
+            metadata["start_time"] = time
+        metadata["last_time"] = time
+
+        await self.redis_client.put(metadata_key, metadata)
+    
+    # have a function that goes through all of the keys and EXPIRES old messages
+    
+    async def process_expired_conversations(self):
+        keys = [key.decode("utf-8") for key in self.redis_client.scan_iter(match="metadata:*", count=10000)]
+        current_time = datetime.now()
+        for key in keys:
+            value = await self.redis_client.get(key)
+            if value["last_updated"] + self.EXPIRED_BUFFER < current_time:
+                parent_id = key.split(":")[1]
+                self.update_db(parent_id)
+                self.reset_conversation(parent_id)
+
+    async def update_db(self, parent_id):
+        # pls implement to upload data into database
+        metadata_key = f"metadata:{parent_id}"
+        metadata = await self.redis_client.get(metadata_key)
+        db.process.metadata(metadata)
+
+        conversation_key = f"conversation:{parent_id}"
+        conversation = await self.redis_client.get(conversation_key)
+        db.process.conversation(conversation)
+    
+    async def reset_conversation(self, parent_id):
+        # reset conversation
+        conversation_key = f"conversation:{parent_id}"
+        await self.redis_client.lpush(conversation_key, self.DUMMY_VALUE)
+        await self.redis_client.ltrim(conversation_key, 1, 0)
+
+        # reset metadata
+        metadata_key = f"metadata:{parent_id}"
+        await self.redis_client.set(metadata_key, {
+            "num_questions": 0,
+            "total_response_time": 0,
+            "start_time": None,
+            "last_time": None
+        })
+
+        # reset wordset
+        wordset_key = f"wordset:{parent_id}"
+        await self.redis_client.delete(wordset_key)
+        await self.redis_client.sadd(wordset_key, self.DUMMY_VALUE)
+        await self.redis_client.srem(wordset_key, self.DUMMY_VALUE)
+
+    async def get_history(self, parent_id) -> list[dict[str, str]]:
         """
         Retrieves chat history for this conversation from Redis
 
         converation_id: string
         """
 
-        redis_key = f"conversation:{conversation_id}"
+        redis_key = f"conversation:{parent_id}"
 
         # Get list of json items
         json_list = await self.client.lrange(redis_key, 0, -1)

@@ -33,3 +33,13 @@ def create_parent(name: str, email: str, child_name: str, child_age: int, instru
     return {
         "parent_id": new_parent.id
     }
+
+
+#Get a list of instrctor ids and names
+@router.get("/parent/{parent_id}")
+async def get_parent(parent_id, db: Session = Depends(get_db)):
+    parent = db.query(Parent.id).filter(Parent.id == parent_id).first().first()
+    if (parent is not None):
+        return {"success"}
+    else:
+        return {"fail"}

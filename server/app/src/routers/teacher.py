@@ -59,6 +59,12 @@ async def delete_doc(document_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Document not found")
     db.delete(document)
     db.commit()
+    try:
+        client.data_object.delete(str(document_id), "Document")  # Assuming "Document" is the class name in Weaviate
+    except ObjectNotFoundException:
+        print(f"Document with ID {document_id} not found in Weaviate.")
+    except RequestsConnectionError as e:
+        raise Exception(f"Failed to connect to Weaviate: {e}")
     return {"success": True}
 
 
@@ -73,7 +79,7 @@ async def upload_pdf_doc(uploaded_file: UploadFile, lesson_id: int, db: Session 
     db.add(new_document)
     db.commit()
 
-    celery_app.send_task("app.tasks.ingest_document", args=[file_location, str(lesson_id)], queue="vdb")
+    celery_app.send_task("app.tasks.ingest_document", args=[file_location, str(new_document.id)], queue="vdb")
     return {"filename": uploaded_file.filename}
 
 
@@ -101,3 +107,12 @@ async def upload_text_doc(
 async def get_instructors(db: Session = Depends(get_db)):
     instructors = db.query(Instructor.id, User.name).join(User, Instructor.id == User.id).all()
     return instructors
+
+#Get a list of instrctor ids and names
+@router.get("/instructor/{instructor_id}")
+async def get_instructor(instructor_id, db: Session = Depends(get_db)):
+    instructor = db.query(Instructor.id).filter(Instructor.id == instructor_id).first().first()
+    if (instructor is not None):
+        return {"success"}
+    else:
+        return {"fail"}
