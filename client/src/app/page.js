@@ -9,6 +9,8 @@ export default async function Home({ searchParams }) {
     `http://localhost:3500/stats/conversation/${conversation_id}`, { cache: "no-store" }
   ).then((res) => res.json());
 
+  const instructors = await fetch(`${process.env.URL}/instructors`).then((res) => res.json()).catch((err) => console.error(err));
+
   return (
     <div className="p-4 md:p-10 mx-auto max-w-7xl flex flex-col">
       <div className="flex h-5 items-center space-x-4 text-small justify-center">
@@ -22,6 +24,7 @@ export default async function Home({ searchParams }) {
         <ConversationTable data={q_and_a || []} />
       </div>
       <Modal searchParams={searchParams} />
+      <p>{JSON.stringify(instructors)}</p>
     </div>
   );
 }

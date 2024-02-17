@@ -4,7 +4,7 @@ from fastapi import APIRouter, UploadFile, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from celery import Celery
 # Adjust imports according to your project structure
-from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse
+from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse, InstructorRequest
 from app.models import Lesson, Document, Instructor, User  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
 from typing import List
@@ -17,28 +17,28 @@ celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
 
 @router.post("/instructor")
-def create_instructor(name: str, email: str, grade: int, db: Session = Depends(get_db)):
+def create_instructor(model: InstructorRequest, db: Session = Depends(get_db)):
     # Check if the email already exists
-    existing_user = db.query(User).filter(User.email == email).first()
+    existing_user = db.query(User).filter(User.email == model.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create a new instructor instance. This also creates a User due to inheritance.
-    new_instructor = Instructor(name=name, email=email, grade=grade)
+    new_instructor = Instructor(name=model.name, email=model.email, grade=model.grade, type="instructor")
     db.add(new_instructor)
     db.commit()
     db.refresh(new_instructor)
-    return {"instructor_id": new_instructor.id}
+    return new_instructor
 
 
 # Create new lesson plan
-@router.post("/lesson", response_model=LessonResponse)
+@router.post("/lesson")
 async def create_lesson(req: LessonRequest, db: Session = Depends(get_db)):
     new_lesson = Lesson(instructor_id=req.instructor_id, description=req.description)
     db.add(new_lesson)
     db.commit()
     db.refresh(new_lesson)
-    return {"lesson_id": new_lesson.id}
+    return new_lesson
 
 
 # Get uploaded docs from lesson plan
@@ -103,16 +103,13 @@ async def upload_text_doc(
 
 
 #Get a list of instrctor ids and names
-@router.get("/instructors", response_model=List[InstructorResponse])
+@router.get("/instructors")
 async def get_instructors(db: Session = Depends(get_db)):
-    instructors = db.query(Instructor.id, User.name).join(User, Instructor.id == User.id).all()
+    instructors = db.query(Instructor).all()
     return instructors
 
 #Get a list of instrctor ids and names
 @router.get("/instructor/{instructor_id}")
 async def get_instructor(instructor_id, db: Session = Depends(get_db)):
     instructor = db.query(Instructor.id).filter(Instructor.id == instructor_id).first().first()
-    if (instructor is not None):
-        return {"success"}
-    else:
-        return {"fail"}
+    return instructor

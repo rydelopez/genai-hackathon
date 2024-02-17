@@ -7,6 +7,8 @@ from celery import Celery
 from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads
 from app.models import Lesson, Document, Instructor, User, Parent  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
+from app.src.schema.parent import ParentRequest
+
 
 
 router = APIRouter()
@@ -14,32 +16,27 @@ router = APIRouter()
 
 
 @router.post("/parent")
-def create_parent(name: str, email: str, child_name: str, child_age: int, instructor_id: int, db: Session = Depends(get_db)):
+def create_parent(model: ParentRequest, db: Session = Depends(get_db)):
     # Check if the email already exists
-    existing_user = db.query(User).filter(User.email == email).first()
+    existing_user = db.query(User).filter(User.email == model.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Check if the instructor exists
-    instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+    instructor = db.query(Instructor).filter(Instructor.id == model.instructor_id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail="Instructor not found")
     
     # Create a new parent instance. This also creates a User due to inheritance.
-    new_parent = Parent(name=name, email=email, child_name=child_name, child_age=child_age, instructor_id=instructor_id)
+    new_parent = Parent(name=model.name, email=model.email, child_name=model.child_name, child_age=child_age, instructor_id=instructor_id, type="parent")
     db.add(new_parent)
     db.commit()
     db.refresh(new_parent)
-    return {
-        "parent_id": new_parent.id
-    }
+    return new_parent
 
 
 #Get a list of instrctor ids and names
-@router.get("/parent/{parent_id}")
-async def get_parent(parent_id, db: Session = Depends(get_db)):
-    parent = db.query(Parent.id).filter(Parent.id == parent_id).first().first()
-    if (parent is not None):
-        return {"success"}
-    else:
-        return {"fail"}
+@router.get("/user/{email}")
+async def get_user(email, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    return user

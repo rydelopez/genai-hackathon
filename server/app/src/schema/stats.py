@@ -15,16 +15,14 @@ class QA(BaseModel):
     reasoning: str #reasoning about ranking from chatGPT
 
 
-class Semantic(BaseModel):
-     postive: float
-     neutral: float
-     negative: float
-
-
 #stats for the first page (parent)
 class FirstPageStats(BaseModel):
-    semantics: Semantic
-    
+    semantics: dict[str, int]
+    topics: dict[str, int]
+    complexity: dict[str, int]
+
+
+
 
 
 
