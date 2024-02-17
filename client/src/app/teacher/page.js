@@ -22,7 +22,7 @@ export default function Teacher() {
 
     const [files, setFiles] = useState([]);
 
-    const [lesson, setLesson] = useState({ label: "", value: 1 });
+    const [lesson, setLesson] = useState({ label: "", value: 0 });
     const [name, setName] = useState("");
     const [id, setId] = useState(0);
     const [concepts, setConcepts] = useState("");
@@ -33,15 +33,20 @@ export default function Teacher() {
     const [userID, setUserID] = useState(0);
 
     const updateFiles = async () => {
-        const response = await fetch(`http://localhost:3500/lesson/${lesson.value}`
-        ).then((res) => res.json());
-        setFiles(response.uploads);
+            const response = await fetch(`http://localhost:3500/lesson/${lesson.value}`
+            ).then((res) => res.json());
+            if (response == null){
+                setFiles([]);
+            }
+            
     };
 
     const setConvos = async () => {
-        const response = await fetch(`http://localhost:3500/lessons/${lesson.value}`
-        ).then((res) => res.json());
-        setConversations(response);
+            const response = await fetch(`http://localhost:3500/lessons/${lesson.value}`
+            ).then((res) => res.json());
+            if (response === null) {
+                setConversations([]);
+            }
     };
 
     useEffect(() => {
