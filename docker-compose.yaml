@@ -45,36 +45,36 @@ services:
     volumes:
       - ./vdb:/code/vdb
       - shared_data:/code/shared_data
-  weaviate:
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8080"
-      - --scheme
-      - http
-    image: semitechnologies/weaviate:1.22.2
-    ports:
-      - 8080:8080
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
-    environment:
-      QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
-      DEFAULT_VECTORIZER_MODULE: text2vec-transformers
-      ENABLE_MODULES: text2vec-transformers
-      CLUSTER_HOSTNAME: "node1"
-      TRANSFORMERS_INFERENCE_API: http://t2v-transformers:8080
-    networks:
-      - hackathon
-  t2v-transformers:
-    image: semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
-    environment:
-      ENABLE_CUDA: 0
-    networks:
-      - hackathon
+  # weaviate:
+  #   command:
+  #     - --host
+  #     - 0.0.0.0
+  #     - --port
+  #     - "8080"
+  #     - --scheme
+  #     - http
+  #   image: semitechnologies/weaviate:1.22.2
+  #   ports:
+  #     - 8080:8080
+  #   volumes:
+  #     - weaviate_data:/var/lib/weaviate
+  #   restart: on-failure:0
+  #   environment:
+  #     QUERY_DEFAULTS_LIMIT: 25
+  #     AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+  #     PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+  #     DEFAULT_VECTORIZER_MODULE: text2vec-transformers
+  #     ENABLE_MODULES: text2vec-transformers
+  #     CLUSTER_HOSTNAME: "node1"
+  #     TRANSFORMERS_INFERENCE_API: http://t2v-transformers:8080
+  #   networks:
+  #     - hackathon
+  # t2v-transformers:
+  #   image: semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
+  #   environment:
+  #     ENABLE_CUDA: 0
+  #   networks:
+  #     - hackathon
 
 volumes:
   shared_data:
