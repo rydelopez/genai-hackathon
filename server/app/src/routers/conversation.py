@@ -9,10 +9,6 @@ import asyncio
 
 from fastapi import (
     APIRouter,
-    FastAPI,
-    WebSocket,
-    WebSocketDisconnect,
-    WebSocketException,
 )
 
 from app.src.socket.connection import ConnectionManager

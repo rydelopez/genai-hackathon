@@ -1,0 +1,79 @@
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, PickleType
+from sqlalchemy.orm import relationship
+
+from .database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    email = Column(String, unique=True)
+
+class Instructor(User):
+    __tablename__ = "instructors"
+
+    id = Column(Integer, primary_key=True)
+    grade = Column(Integer)
+
+class Parent(User):
+    __tablename__ = "parents"
+
+    id = Column(Integer, primary_key=True)
+    child_name = Column(String)
+    child_age = Column(Integer)
+    instructor_id = Column(Integer, ForeignKey("instructors.id"))
+
+class Lesson(Base):
+    __tablename__ = "lessons"
+
+    id = Column(Integer, primary_key=True)
+    instructor_id = Column(Integer, ForeignKey("instructors.id"))
+    description = Column(String)
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey("parents.id"))
+    lesson_id = Column(Integer, ForeignKey("lessons.id"))
+    start_time = Column(DateTime)
+    average_sentences = Column(Integer)
+    unique_words = Column(Integer)
+    average_response_time = Column(Integer)
+
+    language_complexity = Column(Integer)
+    sentiment = Column(PickleType)
+
+class Subject(Base):
+    __tablename__ = "subjects"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    description = Column(String)
+
+class Concept(Base):
+    __tablename__ = "concepts"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    description = Column(String)
+    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    lesson_id = Column(Integer, ForeignKey("lessons.id"))
+
+class ConversationConceptFocus(Base):
+    __tablename__ = "conversationconceptfocuses"
+
+    id = Column(Integer, primary_key=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
+    concept_id = Column(Integer, ForeignKey("concepts.id"))
+    percentage = Column(Integer)
+
+class QuestionResponse(Base):
+    __tablename__ = "questionresponses"
+
+    id = Column(Integer, primary_key=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
+    concept_id = Column(Integer, ForeignKey("concepts.id"))
+    accuracy = Column(Integer)
+    reasoning = Column(String)
