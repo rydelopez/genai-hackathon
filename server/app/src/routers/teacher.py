@@ -4,7 +4,7 @@ from fastapi import APIRouter, UploadFile, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from celery import Celery
 # Adjust imports according to your project structure
-from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse
+from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse, InstructorRequest
 from app.models import Lesson, Document, Instructor, User  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
 from typing import List
@@ -17,14 +17,14 @@ celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
 
 @router.post("/instructor")
-def create_instructor(name: str, email: str, grade: int, db: Session = Depends(get_db)):
+def create_instructor(model: InstructorRequest, db: Session = Depends(get_db)):
     # Check if the email already exists
-    existing_user = db.query(User).filter(User.email == email).first()
+    existing_user = db.query(User).filter(User.email == model.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create a new instructor instance. This also creates a User due to inheritance.
-    new_instructor = Instructor(name=name, email=email, grade=grade, type="instructor")
+    new_instructor = Instructor(name=model.name, email=model.email, grade=model.grade, type="instructor")
     db.add(new_instructor)
     db.commit()
     db.refresh(new_instructor)

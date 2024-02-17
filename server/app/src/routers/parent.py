@@ -7,6 +7,8 @@ from celery import Celery
 from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads
 from app.models import Lesson, Document, Instructor, User, Parent  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
+from app.src.schema.parent import ParentRequest
+
 
 
 router = APIRouter()
@@ -14,19 +16,19 @@ router = APIRouter()
 
 
 @router.post("/parent")
-def create_parent(name: str, email: str, child_name: str, child_age: int, instructor_id: int, db: Session = Depends(get_db)):
+def create_parent(model: ParentRequest, db: Session = Depends(get_db)):
     # Check if the email already exists
-    existing_user = db.query(User).filter(User.email == email).first()
+    existing_user = db.query(User).filter(User.email == model.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Check if the instructor exists
-    instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+    instructor = db.query(Instructor).filter(Instructor.id == model.instructor_id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail="Instructor not found")
     
     # Create a new parent instance. This also creates a User due to inheritance.
-    new_parent = Parent(name=name, email=email, child_name=child_name, child_age=child_age, instructor_id=instructor_id, type="parent")
+    new_parent = Parent(name=model.name, email=model.email, child_name=model.child_name, child_age=child_age, instructor_id=instructor_id, type="parent")
     db.add(new_parent)
     db.commit()
     db.refresh(new_parent)
