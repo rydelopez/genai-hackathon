@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, PickleType
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.database import Base
 
@@ -35,6 +36,7 @@ class Lesson(Base):
     __tablename__ = "lessons"
 
     id = Column(Integer, primary_key=True)
+    time = Column(DateTime, func.now())
     instructor_id = Column(Integer, ForeignKey("instructors.id"))
     description = Column(String)
 
@@ -47,12 +49,12 @@ class Conversation(Base):
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey("parents.id"))
     lesson_id = Column(Integer, ForeignKey("lessons.id"))
-    start_time = Column(DateTime)
-    average_sentences = Column(Integer)
-    unique_words = Column(Integer)
-    average_response_time = Column(Integer)
+    end_time = Column(DateTime, func.now())
 
-    language_complexity = Column(Integer)
+    average_sentences = Column(Integer, default=0)
+    unique_words = Column(Integer, default=0)
+    average_response_time = Column(Integer, default=0)
+    language_complexity = Column(Integer, default= 0)
     sentiment = Column(PickleType)
 
     concept_focuses = relationship("ConversationConceptFocus", backref="conversation")
@@ -89,9 +91,8 @@ class QuestionResponse(Base):
 
     id = Column(Integer, primary_key=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id"))
-    concept_id = Column(Integer, ForeignKey("concepts.id"))
-    accuracy = Column(Integer)
-    reasoning = Column(String)
+    accuracy = Column(Integer, null=True)
+    reasoning = Column(String, null=True)
     question = Column(String)
     answer = Column(String)
 
