@@ -18,12 +18,22 @@ export default function UserPicker({ searchParams }) {
     const router = useRouter();
 
     useEffect(() => {
-        // if (status === "authenticated") {
-        //     const userExists = fetch(`${process.env.URL}/user/${session.user.email}`).then((res) => res.json()).then((data) => data.length > 0);
-            if (searchParams["new"] === "1") {
-                onOpen();
-            }
-        // }
+        if (status === "authenticated") {
+            const userExists = fetch(`http://localhost:3500/user/${session.user.email}`).then((res) => res.json()).then((data) => data !== null).then((data) => {
+                if (searchParams["new"] === "1" && !data) {
+                    onOpen();
+                }
+                else if (searchParams["new"] === "1" && data) {
+                    fetch(`http://localhost:3500/user/${session.user.email}`).then((res) => res.json()).then((data) => {
+                        if (data['type'] === "instructor") {
+                            setUserType("instructor");
+                        } else {
+                            setUserType("parent");
+                        }
+                    });
+                }
+            });
+        }
     }, [searchParams]);
 
     useEffect(() => {
@@ -31,33 +41,44 @@ export default function UserPicker({ searchParams }) {
             setName(session.user.name);
             setEmail(session.user.email);
         }
+    }, [status]);
+
+    useEffect(() => {
+        router.refresh();
     }, []);
 
     const submitInstructor = () => {
-        const id = fetch(`${process.env.URL}/instructor`, {
-            method: "POST", body: {
+        console.log("Test ", name, email, grade);
+        const instructor = fetch(`http://localhost:3500/instructor`, {
+            method: "POST", body: JSON.stringify({
                 name: name,
                 email: email,
                 grade: grade
+            }),
+            headers: {
+                "Content-Type": "application/json"
             }
-        }).then((res) => res.json());
+        }).then((res) => res.json()).then((data) => console.log(data));
     };
 
     const submitParent = () => {
-        const id = fetch(`${process.env.URL}/parent`, {
-            method: "POST", body: {
+        console.log("Test ", name, email, childName, childAge, instructorID);
+        const parent = fetch(`http://localhost:3500/parent`, {
+            method: "POST", body: JSON.stringify({
                 name: name,
                 email: email,
-                childName: childName,
-                childAge: childAge,
-                instructorID: instructorID
+                child_name: childName,
+                child_age: childAge,
+                instructor_id: instructorID
+            }), headers: {
+                "Content-Type": "application/json"
             }
-        }).then((res) => res.json());
+        }).then((res) => res.json()).then((data) => console.log(data));
     }
 
     return (
         <>
-            <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+            <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" isDismissable={false} hideCloseButton={true}>
                 <ModalContent>
                     {(onClose) => (
                         <>
