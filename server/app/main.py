@@ -11,8 +11,9 @@ from celery import Celery
 from app.src.routers import conversation
 from app.src.routers import stats
 from . import models
-from .database import SessionLocal, engine
+from app.database import SessionLocal, engine
 from app.src.routers import teacher
+from app.src.routers import parent
 
 OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
 
@@ -25,6 +26,7 @@ app = FastAPI()
 app.include_router(conversation.router)
 app.include_router(stats.router)
 app.include_router(teacher.router)
+app.include_router(parent.router)
 
 # Create the celery instance
 celery_app = Celery("main_celery_app", broker=REDIS_URL)

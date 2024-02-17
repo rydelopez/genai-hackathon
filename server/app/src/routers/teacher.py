@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from celery import Celery
 # Adjust imports according to your project structure
 from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads
-from app.models import Lesson, Document  # Ensure Document is imported correctly
-from app.database import SessionLocal  # Adjust the import path as necessary
+from app.models import Lesson, Document, Instructor, User  # Ensure Document is imported correctly
+from app.database import SessionLocal, get_db  # Adjust the import path as necessary
 
 REDIS_URL = os.environ.get("REDIS_URL")
 upload_folder = "/code/shared_data"
@@ -14,12 +14,21 @@ upload_folder = "/code/shared_data"
 router = APIRouter()
 celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+@router.post("/instructor")
+def create_instructor(name: str, email: str, grade: int, db: Session = Depends(get_db)):
+    # Check if the email already exists
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create a new instructor instance. This also creates a User due to inheritance.
+    new_instructor = Instructor(name=name, email=email, grade=grade)
+    db.add(new_instructor)
+    db.commit()
+    db.refresh(new_instructor)
+    return {"instructor_id": new_instructor.id}
+
 
 # Create new lesson plan
 @router.post("/lesson", response_model=LessonResponse)
@@ -28,7 +37,8 @@ async def create_lesson(req: LessonRequest, db: Session = Depends(get_db)):
     db.add(new_lesson)
     db.commit()
     db.refresh(new_lesson)
-    return new_lesson
+    return {"lesson_id": new_lesson.id}
+
 
 # Get uploaded docs from lesson plan
 @router.get("/lesson/{lesson_id}", response_model=Uploads)
@@ -39,6 +49,7 @@ async def get_lesson(lesson_id: int, db: Session = Depends(get_db)):
     uploads = [{"name": document.name, "document_id": document.id} for document in lesson.documents]
     return {"uploads": uploads}
 
+
 # Delete documents from lesson plan
 @router.delete("/lesson/doc/{document_id}")
 async def delete_doc(document_id: int, db: Session = Depends(get_db)):
@@ -48,6 +59,7 @@ async def delete_doc(document_id: int, db: Session = Depends(get_db)):
     db.delete(document)
     db.commit()
     return {"success": True}
+
 
 # Upload PDF documents to lesson plan
 @router.post("/lesson/pdf")
@@ -62,6 +74,7 @@ async def upload_pdf_doc(uploaded_file: UploadFile, lesson_id: int, db: Session 
 
     celery_app.send_task("app.tasks.ingest_document", args=[file_location, str(lesson_id)], queue="vdb")
     return {"filename": uploaded_file.filename}
+
 
 # Upload text to lesson plan
 @router.post("/lesson/text")
