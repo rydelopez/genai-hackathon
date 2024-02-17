@@ -1,5 +1,7 @@
 import logging
 import os
+from datetime import datetime, timedelta
+from sqlalchemy import and_
 
 from fastapi import (
     APIRouter,
@@ -7,7 +9,7 @@ from fastapi import (
 )
 from celery import Celery
 
-from app.src.schema.stats import FirstPageStats
+from app.src.schema.stats import FirstPageAggregateStats
 from app.src.schema.stats import SecondPageStats
 from app.models import QuestionResponse
 from app.src.schema.stats import QA
@@ -60,16 +62,45 @@ async def get_conversation_stats(conversation_id: int, db: Session = Depends(get
         q_and_a=qas,
     )
 
+async def get_week_ago(current_time):
+    return current_time - timedelta(days=7)
+async def get_month_ago(current_time):
+    return current_time - timedelta(days=30)
+async def get_year_ago(current_time):
+    return current_time - timedelta(days=365)
 
-@router.get("/stats", response_model=FirstPageStats)
-async def get_conversation_stats(db: Session = Depends(get_db)):
+@router.get("/stats", response_model=FirstPageAggregateStats)
+async def get_conversation_stats(parent_id, timeperiod_arg, db: Session = Depends(get_db)):
+    timeperiod = timeperiod_arg or "Weekly"
+    current_time = datetime.now()
+    earliest = 0
 
-    return FirstPageStats(
-        complexity={"avg_complexity": 0.5},
-        semantics={
-            "positive": 0.6,
-            "neutral": 0.3,
-            "negative": 0.1,
-        },
-        topics={"Math": 1, "Science": 7, "History": 8},
+    if timeperiod == "Weekly":
+        earliest = get_week_ago(current_time)
+    elif timeperiod == "Monthly":
+        earliest = get_month_ago(current_time)
+    else:
+        earliest = get_year_ago(current_time)
+    
+    conversations = db.query(Conversation).filter(
+        and_(
+            Conversation.start_time >= earliest,
+            Conversation.parent_id == parent_id
+        )
+    )
+
+    timestamps = [conversation.start_time for conversation in conversations]
+    average_sentences = [conversation.average_sentences for conversation in conversations]
+    unique_words = [conversation.unique_words for conversation in conversations]
+    average_response_time = [conversation.average_response_time for conversation in conversations]
+    language_complexity = [conversation.language_complexity for conversation in conversations]
+    sentiment = [conversation.sentiment for conversation in conversations]
+
+    return FirstPageAggregateStats(
+        timestamps,
+        average_sentences,
+        unique_words,
+        average_response_time,
+        language_complexity,
+        sentiment,
     )
