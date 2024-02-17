@@ -53,12 +53,14 @@ async def get_conversation_stats(conversation_id: int, db: Session = Depends(get
 
 
 @router.get("/stats", response_model=FirstPageStats)
-async def get_conversation_stats(conversation_id: int, db: Session = Depends(get_db)):
+async def get_conversation_stats(db: Session = Depends(get_db)):
     
 
     return FirstPageStats(
-        complexity={},
-        semantics={},
-        topics={},
+        complexity={"avg_complexity": .5},
+        semantics={"positive": .6,
+        "neutral": .3,
+        "negative": .1,},
+        topics={"Math": 1, "Science": 7, "History": 8},
     )
 

@@ -30,9 +30,7 @@ def create_parent(name: str, email: str, child_name: str, child_age: int, instru
     db.add(new_parent)
     db.commit()
     db.refresh(new_parent)
-    return {
-        "parent_id": new_parent.id
-    }
+    return new_parent
 
 
 #Get a list of instrctor ids and names
