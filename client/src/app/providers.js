@@ -5,10 +5,10 @@ import { SessionProvider } from 'next-auth/react';
 
 export function Providers({ children }) {
   return (
-    <NextUIProvider>
-      <SessionProvider>
+    <SessionProvider>
+      <NextUIProvider>
         {children}
-      </SessionProvider>
-    </NextUIProvider>
+      </NextUIProvider>
+    </SessionProvider>
   )
 }

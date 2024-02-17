@@ -24,7 +24,6 @@ export default async function Home({ searchParams }) {
         <ConversationTable data={q_and_a || []} />
       </div>
       <Modal searchParams={searchParams} />
-      <p>{JSON.stringify(instructors)}</p>
     </div>
   );
 }
