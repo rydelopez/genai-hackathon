@@ -27,5 +27,17 @@ class Upload(BaseModel):
 class Uploads(BaseModel):
     uploads: List[Upload]
 
+#model representing response for uploaded docs
+class InstructorResponse(BaseModel):
+    instructor_id: int
+    name: str
+
+#model representing response for uploaded docs
+class InstructorRequest(BaseModel):
+    email: str
+    name: str
+    grade: int
+
+
     
     

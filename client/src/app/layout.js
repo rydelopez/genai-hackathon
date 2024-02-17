@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from './nav';
 import { Suspense } from 'react';
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,12 +13,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full bg-gray-50">
+    <html lang="en" className="h-full bg-gray-50 light">
       <body className={inter.className}>
-        <Suspense>
-          <Nav />
-        </Suspense>
-        {children}
+        <Providers>
+          <Suspense>
+            <Nav />
+          </Suspense>
+          {children}
+        </Providers>
       </body>
     </html>
   );

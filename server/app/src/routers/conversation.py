@@ -15,10 +15,10 @@ weaviate_connector = WeaviateVDB()
 from app.src.llm.openai_llm import OpenAILLM
 
 
-#function for handling chat input
+# Function for handling chat input
 @router.post("/chatbot")
 async def chatbot(
-    client_message: Message,
+    client_message: Message
 ):
 
     #async connection to the redis server
@@ -38,7 +38,7 @@ async def chatbot(
 
     # Retrieve the appropriate data from the vector database based off of the user's question
     retrieved_doc = weaviate_connector.query_documents(
-        user_message, lesson_id="hello1"
+        user_message, lesson_id=client_message.lesson_id
     )
 
     # Get the old chat history
