@@ -93,3 +93,10 @@ async def upload_text_doc(
     db.refresh(document)
 
     return {"success": True, "document_id": document.id}
+
+
+#Get a list of instrctor ids and names
+@router.get("/instructors", response_model=List[InstructorResponse])
+async def get_instructors(db: Session = Depends(get_db)):
+    instructors = db.query(Instructor.id, User.name).join(User, Instructor.id == User.id).all()
+    return instructors
