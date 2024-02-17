@@ -10,7 +10,7 @@ app = FastAPI()
 
 #model representing a lesson request
 class LessonRequest(BaseModel):
-    teacher_id: int #id of teacher creating the lesson
+    instructor_id: int #id of teacher creating the lesson
     description: str  #descipriton of lesson
     concepts: List[str] #concepts 
 
