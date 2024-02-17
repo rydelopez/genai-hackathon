@@ -30,10 +30,10 @@ async def get_conversation_stats(conversation_id: int, db: Session = Depends(get
 
     # Example placeholders for calculating statistics
     # You need to replace these with actual data queries and calculations
-    avg_response_length = calculate_avg_response_length(db, conversation_id)
-    unique_words = calculate_unique_words(db, conversation_id)
-    response_time = calculate_response_time(db, conversation_id)
-    q_and_a = fetch_q_and_a(db, conversation_id)  # This should return a list of dictionaries or objects matching the QA model
+    avg_response_length = conversation.average_sentences
+    unique_words = conversation.unique_words
+    response_time = conversation.average_response_time
+    q_and_a = db.query(QuestionResponse).filter(QuestionResponse.id == conversation_id).all()
 
     return SecondPageStats(
         avg_response_length=avg_response_length,
@@ -42,39 +42,4 @@ async def get_conversation_stats(conversation_id: int, db: Session = Depends(get
         q_and_a=q_and_a
     )
 
-# Placeholder functions for calculations
-# Implement these functions based on your data and requirements
-def calculate_avg_response_length(db: Session, conversation_id: int) -> int:
-    # This is a simplified query. You need to adapt it to your actual data model.
-    messages = db.query(Message).filter(Message.conversation_id == conversation_id, Message.is_response == True)
-    total_length = sum(len(message.text) for message in messages)
-    avg_length = total_length / messages.count() if messages.count() else 0
-    return avg_length
-
-
-def calculate_unique_words(db: Session, conversation_id: int) -> int:
-    messages = db.query(Message).filter(Message.conversation_id == conversation_id)
-    words = set()
-    for message in messages:
-        words.update(message.text.split())  # This simplistic split might need to be replaced with a more sophisticated tokenizer
-    return len(words)
-
-
-def calculate_response_time(db: Session, conversation_id: int) -> int:
-    messages = db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.timestamp.asc()).all()
-    total_time = 0
-    for i in range(1, len(messages)):
-        total_time += (messages[i].timestamp - messages[i-1].timestamp).seconds
-    avg_time = total_time / (len(messages) - 1) if messages else 0
-    return avg_time
-
-
-def fetch_q_and_a(db: Session, conversation_id: int):
-    # This implementation is highly dependent on your data model.
-    # Here's a conceptual approach assuming sequential Q&A.
-    messages = db.query(QuestionResponse).filter(QuestionResponse.conversation_id == conversation_id).all()
-    q_and_a = []
-    for i in range(0, len(messages)-1, 2):  # Assuming every question is immediately followed by its answer
-        q_and_a.append({"question": messages[i].text, "answer": messages[i+1].text})
-    return q_and_a
 

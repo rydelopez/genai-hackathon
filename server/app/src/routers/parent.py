@@ -8,11 +8,9 @@ from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads
 from app.models import Lesson, Document, Instructor, User, Parent  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
 
-REDIS_URL = os.environ.get("REDIS_URL")
-upload_folder = "/code/shared_data"
 
 router = APIRouter()
-celery_app = Celery("main_celery_app", broker=REDIS_URL)
+
 
 
 @router.post("/parent")
