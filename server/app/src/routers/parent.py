@@ -26,7 +26,7 @@ def create_parent(name: str, email: str, child_name: str, child_age: int, instru
         raise HTTPException(status_code=404, detail="Instructor not found")
     
     # Create a new parent instance. This also creates a User due to inheritance.
-    new_parent = Parent(name=name, email=email, child_name=child_name, child_age=child_age, instructor_id=instructor_id)
+    new_parent = Parent(name=name, email=email, child_name=child_name, child_age=child_age, instructor_id=instructor_id, type="parent")
     db.add(new_parent)
     db.commit()
     db.refresh(new_parent)

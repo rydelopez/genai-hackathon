@@ -24,7 +24,7 @@ def create_instructor(name: str, email: str, grade: int, db: Session = Depends(g
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create a new instructor instance. This also creates a User due to inheritance.
-    new_instructor = Instructor(name=name, email=email, grade=grade)
+    new_instructor = Instructor(name=name, email=email, grade=grade, type="instructor")
     db.add(new_instructor)
     db.commit()
     db.refresh(new_instructor)
@@ -103,9 +103,9 @@ async def upload_text_doc(
 
 
 #Get a list of instrctor ids and names
-@router.get("/instructors", response_model=List[InstructorResponse])
+@router.get("/instructors")
 async def get_instructors(db: Session = Depends(get_db)):
-    instructors = db.query(Instructor.id, User.name).join(User, Instructor.id == User.id).all()
+    instructors = db.query(Instructor).all()
     return instructors
 
 #Get a list of instrctor ids and names
