@@ -23,4 +23,7 @@ async def get_conversation_stats(conversation_id):
     return {"avg_response_length": 0, "unique_length": 0, "response_time": 0}
 
 
+@router.get("/stats/conversation/{conversation_id}", response_model=SecondPageStats)
+async def get_conversation_stats(conversation_id):
+    return {"avg_response_length": 0, "unique_length": 0, "response_time": 0}
     

@@ -24,6 +24,7 @@ class Semantic(BaseModel):
 #stats for the first page (parent)
 class FirstPageStats(BaseModel):
     semantics: Semantic
+    
 
 
 

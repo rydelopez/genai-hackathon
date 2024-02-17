@@ -10,6 +10,7 @@ from celery import Celery
 
 from app.src.routers import conversation
 from app.src.routers import stats
+from app.src.routers import teacher
 
 
 REDIS_URL = os.environ.get("REDIS_URL")
@@ -18,6 +19,7 @@ REDIS_URL = os.environ.get("REDIS_URL")
 app = FastAPI()
 app.include_router(conversation.router)
 app.include_router(stats.router)
+app.include_router(teacher.router)
 
 # Create the celery instance
 celery_app = Celery("main_celery_app", broker=REDIS_URL)
