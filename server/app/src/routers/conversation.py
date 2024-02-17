@@ -1,11 +1,3 @@
-import logging
-from pydantic import BaseModel
-
-from uuid import uuid4
-
-from fastapi.responses import StreamingResponse
-
-import asyncio
 
 from fastapi import (
     APIRouter,
@@ -15,66 +7,55 @@ from fastapi import (
     WebSocketException,
 )
 
-from app.src.socket.connection import ConnectionManager
 from app.src.redis.config import RedisConnector
-from app.src.redis.consumer import Consumer
-from app.src.redis.producer import Producer
 from app.src.schema.conversation import Message
-
+from app.src.vdb.weaviate_connector import WeaviateVDB
+from app.src.redis.history import ConversationHistory
 
 router = APIRouter()
-connection_manager = ConnectionManager()
 redis_connector = RedisConnector()
+weaviate_connector = WeaviateVDB()
+
+from app.src.llm.openai_llm import OpenAILLM
 
 
+#function for handling chat input
 @router.post("/chatbot")
 async def chatbot(
     client_message: Message,
 ):
 
-    # Connect to the redis client, which we need for the producer and consumer
+    #async connection to the redis server
     redis_client = await redis_connector.create_connection()
 
-    # Set up our consumer and consumer
-    producer = Producer(redis_client)
+    #ConversationHistory setup
+    history = ConversationHistory(redis_client)
 
-    # Loop where we wait for a user message and send one back
-    try:
-        # Format message to be used by the producer
-        # - Expected format: {conversation_id: message}
-        # - The message id will automatically be created in `producer.py`
-        message = {client_message.conversation_id: client_message.message}
+    # Instantiate the LLM instance
+    # - Moving this outside the loop for now, but when we deal with API tokens
+    #   we may have to figure out a way to safely handle state changes
+    llm = OpenAILLM("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", "gpt-3.5-turbo", 1, 100)
 
-        # Send message via the producer
-        await producer.add_to_stream(message)
-        print("Added human message to stream...")
+    # Read from the stream (message from the user)
+    user_message = client_message.message
+    conversation_id = client_message.conversation_id
 
-    except Exception as e:
-        print("bro An exception occurred while trying to add new message to stream")
-        print(e)
-
-
-@router.get("/get_messages")
-async def message_stream(conversation_id: str):
-    redis_client = await redis_connector.create_connection()
-    consumer = Consumer(redis_client)
-
-    return StreamingResponse(
-        consumer.get_message_stream(block=0, conversation_id=conversation_id),
-        media_type="text/event-stream",
+    # Retrieve the appropriate data from the vector database based off of the user's question
+    retrieved_doc = weaviate_connector.query_documents(
+        user_message, lesson_id="hello1"
     )
 
+    # Get the old chat history
+    history_dict = await history.get_history(conversation_id)
 
-@router.post("/clear_history")
-async def clear_history(conversation_id: str):
-    redis_client = await redis_connector.create_connection()
+    # Format the input for the LLM wrapper
+    llm_input = llm.format_input(
+        user_input=user_message, history_list=history_dict, context=retrieved_doc
+    )
 
-    redis_key = f"conversation:{conversation_id}"
-    await redis_client.delete(redis_key)
-    return {"response": "success"}
+    # When we query with stream=False, we will just get a string
+    llm_response = await llm.query(llm_input, True)
 
-
-@router.get("/get_conversation_id")
-async def get_conversation_id():
-    new_id = uuid4()
-    return {"conversation_id": new_id.hex}
+    # Update chat history with new user + bot response
+    await history.append_message(conversation_id, "user", user_message)
+    await history.append_message(conversation_id, "chatbot", llm_response)
