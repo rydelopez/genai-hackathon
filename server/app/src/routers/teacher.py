@@ -15,7 +15,7 @@ router = APIRouter()
 celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
 
-@router.post("/instructor/")
+@router.post("/instructor")
 def create_instructor(name: str, email: str, grade: int, db: Session = Depends(get_db)):
     # Check if the email already exists
     existing_user = db.query(User).filter(User.email == email).first()
