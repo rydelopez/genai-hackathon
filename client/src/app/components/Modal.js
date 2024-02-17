@@ -21,9 +21,6 @@ export default function UserPicker({ searchParams }) {
         if (status === "authenticated") {
             const userExists = fetch(`http://localhost:3500/user/${session.user.email}`).then((res) => res.json()).then((data) => data !== null).then((data) => {
                 if (searchParams["new"] === "1" && !data) {
-                    // if (searchParams["new"] === "1") {
-                    //     onOpen();
-                    // }
                     onOpen();
                 }
                 else if (searchParams["new"] === "1" && data) {
