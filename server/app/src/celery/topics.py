@@ -24,12 +24,12 @@ class Subject(Enum):
 concept_model = BERTopic.load(CONCEPT_MODEL)
 
 def get_concept(text: str) -> str:
-    topic, prob = topic_model.transform(text)
+    topic, prob = concept_model.transform(text)
     topic = topic[0]
     if topic == -1 or prob < TOPIC_PROB_THRESHOLD:
         return None
 
-    return topic_model.get_topic_info(topic)['Name'].item()
+    return concept_model.get_topic_info(topic)['Name'].item()
 
 
 # Subjects
