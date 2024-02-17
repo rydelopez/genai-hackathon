@@ -38,13 +38,22 @@ async def delete_doc(document_id: int):
 
 
 #upload pdf documents to lesson plan
-@router.post("/lesson/doc")
-async def upload_pdf(uploaded_file: UploadFile):
-    return {"success": 0}
+@router.post("/lesson/pdf")
+async def upload_pdf_doc(uploaded_file: UploadFile, lesson_id: str):
+    # Write the uploaded file to disc
+    file_location = f"{upload_folder}/{uploaded_file.filename}"
+    with open(file_location, "wb+") as file_object:
+        file_object.write(uploaded_file.file.read())
+
+    # Send a task, with the file location and project id
+    celery_app.send_task(
+        "app.tasks.ingest_document", args=[file_location, lesson_id], queue="vdb"
+    )
+    return {"filename": uploaded_file.filename}
 
 
 
 #upload text to lesson plan
 @router.post("/lesson/text")
-async def upload_pdf(text: str):
+async def upload_text_doc(text: str):
     return {"success": 0}
