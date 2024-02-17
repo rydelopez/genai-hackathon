@@ -16,14 +16,14 @@ app = Celery("vdb", backend=REDIS_URL, broker=REDIS_URL)
 
 
 @app.task()
-def ingest_document(file_path: str, project_id: str):
+def ingest_document(file_path: str, lesson_id: str):
     # Open the downloaded file and get the elements
     elements = partition_pdf(filename=file_path)
     document_text = " ".join(e.text for e in elements)
     print("processed document")
 
     # Upload to Weaviate
-    item = {"source": file_path, "content": document_text, "project_id": project_id}
+    item = {"source": file_path, "content": document_text, "lesson_id": lesson_id}
     client = weaviate.Client(
         url=WEAVIATE_URL,
     )
