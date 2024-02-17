@@ -1,13 +1,19 @@
 import os
 
 import json
+from server.app.src.celery.complexity import measure_convo_complexity
+from server.app.src.celery.sentiment import measure_convo_sentiment
+from server.app.src.celery.topics import measure_convo_topics
 import weaviate
 
-from fastapi import UploadFile
+from fastapi import UploadFile, Depends
 from celery import Celery
 from celery.result import AsyncResult
 from app.src.redis.config import RedisConnector
 from ..redis.history import ConversationHistory
+from sqlalchemy.orm import Session
+from app.database import SessionLocal, get_db
+from app.models import Conversation, QuestionResponse, ConversationConceptFocus
 
 from unstructured.partition.pdf import partition_pdf
 
@@ -21,14 +27,13 @@ WEAVIATE_URL = os.environ.get("WEAVIATE_URL")
 
 app = Celery("celery", backend=REDIS_URL, broker=REDIS_URL)
 
+# Beat Scheduler Settings
 app.conf.beat_schedule = {
     "add-every-30-seconds": {
-        "task": "celery_worker.scan_database",  # Task to run
-        "schedule": 600,   # Run every 30 seconds
+        "task": "celery_worker.scan_database",
+        "schedule": 600,
     },
 }
-
-# Optional settings
 app.conf.timezone = 'UTC'
 
 
@@ -51,6 +56,26 @@ def ingest_document(file_path: str, project_id: str):
     print("embedded and added document to vdb")
 
     return "Completed document ingest."
+
+@app.task()
+def calculate_nlp_metrics(conversation_id: int, db: Session = Depends(get_db)):
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    messages = db.query(QuestionResponse).filter(QuestionResponse.conversation_id == conversation_id)
+
+    # calculate conversation fields
+    conversation.complexity = int(measure_convo_complexity(messages)["avg_complexity"] * 100)
+    conversation.sentiment = measure_convo_sentiment(messages)
+    db.commit()
+
+    # calculate topic fields
+    concept_counter = measure_convo_topics(messages)
+    total_messages = sum(concept_counter.values())
+    for concept_id, freq in concept_counter.items():
+        new_concept_focus = ConversationConceptFocus(conversation_id=conversation_id, concept_id=concept_id, percentage=int(100 * 1.0 * freq / total_messages))
+        db.add(new_concept_focus)
+    db.commit()
+    
+    # LATER: calculate accuracy metrics
 
 @app.task
 async def scan_database():

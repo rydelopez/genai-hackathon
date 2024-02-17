@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from collections import Counter
 
+from schema.conversation import ChatSession
 
 SENTIMENT_MODEL_NAME = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 

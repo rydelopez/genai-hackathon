@@ -4,6 +4,7 @@ from setfit import SetFitModel
 from collections import Counter
 from enum import Enum, auto
 
+from schema.conversation import ChatSession
 
 TOPIC_PROB_THRESHOLD = 0.3
 CONCEPT_MODEL = "MaartenGr/BERTopic_Wikipedia"

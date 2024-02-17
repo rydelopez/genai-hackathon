@@ -4,6 +4,8 @@ from nltk.corpus import cmudict
 
 import numpy as np
 
+from schema.conversation import ChatSession
+
 
 nltk.download('punkt')
 nltk.download('cmudict')
