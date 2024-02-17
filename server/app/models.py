@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, PickleType
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from app.database import Base
 
 
 class User(Base):
@@ -92,6 +92,8 @@ class QuestionResponse(Base):
     concept_id = Column(Integer, ForeignKey("concepts.id"))
     accuracy = Column(Integer)
     reasoning = Column(String)
+    question = Column(String)
+    answer = Column(String)
 
 # NOTE: might need to define relationship from concept to conversationconceptfocuses and questionresponses
 
