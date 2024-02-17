@@ -14,6 +14,8 @@ from . import models
 from .database import SessionLocal, engine
 from app.src.routers import teacher
 
+OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
+
 
 REDIS_URL = os.environ.get("REDIS_URL")
 

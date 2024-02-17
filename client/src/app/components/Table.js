@@ -1,6 +1,6 @@
 "use client";
 
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, getKeyValue } from "@nextui-org/react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, getKeyValue, Spinner } from "@nextui-org/react";
 
 const columns = [
     {
@@ -16,20 +16,20 @@ const columns = [
         label: "Ranking",
     },
     {
-        key: "reason",
-        label: "Reason",
+        key: "reasoning",
+        label: "Reasoning",
     },
 ];
 
 export default function ConversationTable({ data }) {
     return (
-        <Table>
+        <Table isStriped aria-label="Conversation Table">
             <TableHeader columns={columns}>
                 {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
             </TableHeader>
-            <TableBody items={data}>
+            <TableBody items={data} emptyContent={"No rows to display."} loadingContent={<Spinner label="Loading..." />}>
                 {(item) => (
-                    <TableRow>
+                    <TableRow key={item.question}>
                         {(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}
                     </TableRow>
                 )}
