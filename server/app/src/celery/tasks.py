@@ -13,7 +13,7 @@ from app.src.redis.config import RedisConnector
 from ..redis.history import ConversationHistory
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, get_db
-from app.models import Conversation, QuestionResponse, ConversationConceptFocus
+from app.models import Conversation, QuestionResponse, ConversationConceptFocus, Parent, Lesson
 
 from unstructured.partition.pdf import partition_pdf
 
@@ -58,12 +58,32 @@ def ingest_document(file_path: str, project_id: str):
     return "Completed document ingest."
 
 @app.task()
-def calculate_nlp_metrics(conversation_id: int, db: Session = Depends(get_db)):
+def add_conversation_metadata(parent_id, metadata, db: Session = Depends(get_db)):
+    instructor_id = db.query(Parent).filter(Parent.id == parent_id).first().instructor_id
+    lesson_id = db.query(Lesson).filter(Lesson.instructor_id == instructor_id).order_by(Lesson.time.desc()).first().id
+
+    num_questions = metadata["num_questions"]
+    average_sentences = int(metadata["num_sentences"] / num_questions)
+    average_response_time = int(metadata["total_response_time"] / num_questions)
+    
+    new_conversation = Conversation(
+        parent_id=parent_id,
+        lesson_id=lesson_id,
+        average_sentences=average_sentences,
+        unique_words=metadata["num_unique_words"],
+        average_response_time=average_response_time
+    )
+    db.add(new_conversation)
+    db.commit()
+
+    return new_conversation.id
+
+@app.task()
+def calculate_nlp_metrics(conversation_id, messages, db: Session = Depends(get_db)):
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    messages = db.query(QuestionResponse).filter(QuestionResponse.conversation_id == conversation_id)
 
     # calculate conversation fields
-    conversation.complexity = int(measure_convo_complexity(messages)["avg_complexity"] * 100)
+    conversation.language_complexity = int(measure_convo_complexity(messages)["avg_complexity"] * 100)
     conversation.sentiment = measure_convo_sentiment(messages)
     db.commit()
 
@@ -76,6 +96,16 @@ def calculate_nlp_metrics(conversation_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     # LATER: calculate accuracy metrics
+
+@app.task()
+def add_conversation_to_db(conversation_id, question_answers, db: Session = Depends(get_db)):
+    objs = [QuestionResponse(
+        conversation_id=conversation_id,
+        question=qa["question"],
+        answer=qa["answer"]
+    ) for qa in question_answers]
+    db.add_all(objs)
+    db.commit()
 
 @app.task
 async def scan_database():

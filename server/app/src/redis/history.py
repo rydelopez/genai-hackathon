@@ -1,7 +1,12 @@
 # JSON caching methods
+import os
 import json
 from datetime import datetime
 
+from celery import Celery
+REDIS_URL = os.environ.get("REDIS_URL")
+
+celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
 # Redis Schema
 # Type 1: Current Conversation
@@ -82,16 +87,42 @@ class ConversationHistory:
                 parent_id = key.split(":")[1]
                 self.update_db(parent_id)
                 self.reset_conversation(parent_id)
+    
+    async def make_question_answers_answers(conversation):
+        question_answers = []
+        type = "non-user"
+        curr = {}
+
+        for obj in conversation:
+            if obj["type"] == "user" and type == "user":
+                curr["answer"] += " " + obj["contents"]
+            elif obj["type"] != "user" and type == "user":
+                question_answers.append(curr)
+                type = "non-user"
+                curr = {}
+            elif obj["type"] == "user" and type != "user":
+                type = "user"
+                curr["question"] = obj["contents"]
+            else:
+                curr["question"] += " " + obj["contents"]
+        
+        question_answers.append(curr)
+        return question_answers[1:]
 
     async def update_db(self, parent_id):
-        # pls implement to upload data into database
         metadata_key = f"metadata:{parent_id}"
+        wordset_key = f"wordset:{parent_id}"
         metadata = await self.redis_client.get(metadata_key)
-        db.process.metadata(metadata)
-
+        metadata["num_unique_words"] = await self.redis_client.scard(wordset_key)
         conversation_key = f"conversation:{parent_id}"
         conversation = await self.redis_client.get(conversation_key)
-        db.process.conversation(conversation)
+
+        questions_answers = self.make_question_answers(conversation)
+        answers = [obj["answer"] for obj in questions_answers]
+
+        conversation_id = celery_app.send_task("app.src.celery.tasks.add_conversation_metadata", args=[parent_id, metadata], queue="celery")
+        celery_app.send_task("app.src.celery.tasks.calculate_nlp_metrics", args=[conversation_id, answers], queue="celery")
+        celery_app.send_task("app.src.celery.tasks.add_conversation_to_db", args=[conversation_id, questions_answers], queue="celery")
     
     async def reset_conversation(self, parent_id):
         # reset conversation
