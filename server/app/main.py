@@ -14,6 +14,7 @@ from . import models
 from app.database import SessionLocal, engine
 from app.src.routers import teacher
 from app.src.routers import parent
+from app.src.tests import load_dummy
 
 OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
 
@@ -55,6 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+load_dummy.load_dummy_data()
 
 # Base route
 @app.get("/")
