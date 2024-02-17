@@ -43,7 +43,6 @@ function AudioRecorderButton() {
 
     const formData = new FormData();
     formData.append('audio', audioData, 'student_recording.webm');
-    formData.append('');
 
     try {
       const response = await fetch('http://localhost:3500/student/chat', {
