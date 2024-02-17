@@ -113,7 +113,7 @@ export default function Navbar({ user }) {
                                                                 active ? 'bg-gray-100' : '',
                                                                 'flex w-full px-4 py-2 text-sm text-gray-700'
                                                             )}
-                                                            onClick={() => signIn('github')}
+                                                            onClick={() => signIn('google', { callbackUrl: '/?new=1' })}
                                                         >
                                                             Sign in
                                                         </button>
@@ -190,7 +190,7 @@ export default function Navbar({ user }) {
                             ) : (
                                 <div className="mt-3 space-y-1">
                                     <button
-                                        onClick={() => signIn('github')}
+                                        onClick={() => signIn('google', { callbackUrl: '/?new=1' })}
                                         className="flex w-full px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                                     >
                                         Sign in
