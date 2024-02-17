@@ -1,7 +1,8 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, PickleType
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -10,15 +11,6 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique=True)
     type = Column(String)
-
-class Instructor(User):
-    __tablename__ = "instructors"
-
-    id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    grade = Column(Integer)
-
-    lessons = relationship("Lesson", backref="instructor")
-    students = relationship("Parent", backref="instructor")
 
 class Parent(User):
     __tablename__ = "parents"
@@ -29,6 +21,15 @@ class Parent(User):
     instructor_id = Column(Integer, ForeignKey("instructors.id"))
 
     conversations = relationship("Conversation", backref="parent")
+
+class Instructor(User):
+    __tablename__ = "instructors"
+
+    id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    grade = Column(Integer)
+
+    lessons = relationship("Lesson", backref="instructor")
+    students = relationship("Parent", backref="instructor", primaryjoin=id==Parent.instructor_id)
 
 class Lesson(Base):
     __tablename__ = "lessons"
@@ -91,6 +92,8 @@ class QuestionResponse(Base):
     concept_id = Column(Integer, ForeignKey("concepts.id"))
     accuracy = Column(Integer)
     reasoning = Column(String)
+    question = Column(String)
+    answer = Column(String)
 
 # NOTE: might need to define relationship from concept to conversationconceptfocuses and questionresponses
 
@@ -99,4 +102,4 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    lesson_id = Column(Integer, ForeignKey("documents.id"))
+    lesson_id = Column(Integer, ForeignKey("lessons.id"))

@@ -5,11 +5,12 @@ import json
 import requests
 import weaviate
 
+import time
+
 
 class WeaviateVDB:
     def __init__(self):
         """Initialize settings for Weaviate server"""
-        
         self.WEAVIATE_URL = os.environ["WEAVIATE_URL"]
         self.client = weaviate.Client(
             url=self.WEAVIATE_URL,
@@ -28,7 +29,6 @@ class WeaviateVDB:
         except:
             # We reach here if the class has already been created
             pass
-            
 
     def query_documents(self, user_query: str, lesson_id: str) -> str:
         """Given a user query, returns the most relevant document
@@ -40,7 +40,7 @@ class WeaviateVDB:
                 self.client.query.get("Document", ["content"])
                 .with_where(
                     {
-                        "path": ["project_id"],
+                        "path": ["lesson_id"],
                         "operator": "Equal",
                         "valueText": lesson_id,
                     }
