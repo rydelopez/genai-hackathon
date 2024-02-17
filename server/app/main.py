@@ -10,10 +10,12 @@ from celery import Celery
 
 from app.src.routers import conversation
 from app.src.routers import stats
-
+from . import models
+from .database import SessionLocal, engine
 
 REDIS_URL = os.environ.get("REDIS_URL")
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(conversation.router)

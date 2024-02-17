@@ -6,6 +6,8 @@ services:
     working_dir: /code/server
     ports:
       - 3500:3500
+    networks:
+      - hackathon
     environment:
       - REDIS_URL=redis://redis:6379
     volumes:
@@ -17,17 +19,25 @@ services:
     command: "redis-server"
     ports:
       - 6379:6379
-  db:
+    networks:
+      - hackathon
+  postgres:
     image: postgres
     command: postgres
+    networks:
+      - hackathon
     environment:
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
     volumes:
       - ./postgres:/var/lib/postgresql/pgdata
-  
+
 volumes:
   shared_data:
+
+networks:
+  hackathon:
+    name: my-shared-network
