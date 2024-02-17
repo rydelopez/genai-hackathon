@@ -17,16 +17,21 @@ export default function UserPicker({ searchParams }) {
     const [email, setEmail] = useState("");
     const router = useRouter();
 
-    if (status === "authenticated" && !name && !email) {
-        setName(session.user.name);
-        setEmail(session.user.email);
-    }
-
     useEffect(() => {
-        if (searchParams["new"] === "1") {
-            onOpen();
+        if (status === "authenticated") {
+            const userExists = fetch(`${process.env.URL}/user/${session.user.email}`).then((res) => res.json()).then((data) => data.length > 0);
+            if (searchParams["new"] === "1" && !userExists) {
+                onOpen();
+            }
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        if (status === "authenticated" && !name && !email) {
+            setName(session.user.name);
+            setEmail(session.user.email);
+        }
+    }, []);
 
     const submitInstructor = () => {
         const id = fetch(`${process.env.URL}/instructor`, {

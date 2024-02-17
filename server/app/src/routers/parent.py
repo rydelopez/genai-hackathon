@@ -36,10 +36,7 @@ def create_parent(name: str, email: str, child_name: str, child_age: int, instru
 
 
 #Get a list of instrctor ids and names
-@router.get("/parent/{parent_id}")
-async def get_parent(parent_id, db: Session = Depends(get_db)):
-    parent = db.query(Parent.id).filter(Parent.id == parent_id).first().first()
-    if (parent is not None):
-        return {"success"}
-    else:
-        return {"fail"}
+@router.get("/user/{email}")
+async def get_user(email, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    return user
