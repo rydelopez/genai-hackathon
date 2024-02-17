@@ -4,9 +4,10 @@ from fastapi import APIRouter, UploadFile, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from celery import Celery
 # Adjust imports according to your project structure
-from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads
+from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse
 from app.models import Lesson, Document, Instructor, User  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
+from typing import List
 
 REDIS_URL = os.environ.get("REDIS_URL")
 upload_folder = "/code/shared_data"
