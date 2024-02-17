@@ -14,6 +14,7 @@ from . import models
 from app.database import SessionLocal, engine
 from app.src.routers import teacher
 from app.src.routers import parent
+from app.src.redis.config import RedisConnector
 
 OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
 
@@ -55,6 +56,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load In Stopwords
+redis_connector = RedisConnector()
+redis_client = redis_connector.create_connection()
+stopwords_key = "stopwords"
+with open("stopwords.txt", "r") as file:
+    for line in file.readlines():
+        redis_client.sadd(stopwords_key, line.strip())
 
 # Base route
 @app.get("/")

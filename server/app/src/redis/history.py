@@ -52,7 +52,7 @@ class ConversationHistory:
     async def update_metadata(self, parent_id, message_type, message_contents, response_time):
         metadata_key = f"metadata:{parent_id}"
         wordset_key = f"wordset:{parent_id}"
-        stopwords_key = f"stopwords"
+        stopwords_key = "stopwords"
         time = datetime.now()
         metadata = await self.client.get(metadata_key)
 
