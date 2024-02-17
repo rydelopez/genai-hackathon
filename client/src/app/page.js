@@ -6,7 +6,7 @@ export default async function Home({ searchParams }) {
   const conversation_id = "123";
 
   const { avg_response_length, unique_words, response_time, q_and_a } = await fetch(
-    `${process.env.URL}/stats/conversation/${conversation_id}`, { cache: "no-store" }
+    `http://localhost:3500/stats/conversation/${conversation_id}`, { cache: "no-store" }
   ).then((res) => res.json());
 
   return (
