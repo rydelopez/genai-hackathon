@@ -10,7 +10,6 @@ app = FastAPI()
 class Message(BaseModel):
     conversation_id: str | None = "1"
     project_id: str
-
     name: str | None = None
     message: str | None = None
     time_stamp: datetime | None = None
