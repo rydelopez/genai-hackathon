@@ -28,17 +28,17 @@ def create_instructor(name: str, email: str, grade: int, db: Session = Depends(g
     db.add(new_instructor)
     db.commit()
     db.refresh(new_instructor)
-    return {"instructor_id": new_instructor.id}
+    return new_instructor
 
 
 # Create new lesson plan
-@router.post("/lesson", response_model=LessonResponse)
+@router.post("/lesson")
 async def create_lesson(req: LessonRequest, db: Session = Depends(get_db)):
     new_lesson = Lesson(instructor_id=req.instructor_id, description=req.description)
     db.add(new_lesson)
     db.commit()
     db.refresh(new_lesson)
-    return {"lesson_id": new_lesson.id}
+    return new_lesson
 
 
 # Get uploaded docs from lesson plan
@@ -112,7 +112,4 @@ async def get_instructors(db: Session = Depends(get_db)):
 @router.get("/instructor/{instructor_id}")
 async def get_instructor(instructor_id, db: Session = Depends(get_db)):
     instructor = db.query(Instructor.id).filter(Instructor.id == instructor_id).first().first()
-    if (instructor is not None):
-        return {"success"}
-    else:
-        return {"fail"}
+    return instructor
