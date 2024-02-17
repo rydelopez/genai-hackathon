@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from celery import Celery
 # Adjust imports according to your project structure
 from app.src.schema.teacher import LessonRequest, LessonResponse, Uploads, InstructorResponse, InstructorRequest
-from app.models import Lesson, Document, Instructor, User  # Ensure Document is imported correctly
+from app.models import Lesson, Document, Instructor, User, Concept  # Ensure Document is imported correctly
 from app.database import SessionLocal, get_db  # Adjust the import path as necessary
 from typing import List
 
@@ -38,6 +38,11 @@ async def create_lesson(req: LessonRequest, db: Session = Depends(get_db)):
     db.add(new_lesson)
     db.commit()
     db.refresh(new_lesson)
+
+    concepts = [Concept(name=concept_str, description="Concept Description.", lesson_id=new_lesson.id) for concept_str in req.concepts]
+    db.add_all(concepts)
+    db.commit()
+
     return new_lesson
 
 
