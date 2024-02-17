@@ -16,15 +16,13 @@ class QA(BaseModel):
 
 
 #stats for the first page (parent)
-class FirstPageStats(BaseModel):
-    semantics: dict[str, int]
-    topics: dict[str, int]
-    complexity: dict[str, int]
-
-
-
-
-
+class FirstPageAggregateStats(BaseModel):
+    timestamps: list[float]
+    average_sentences: list[int]
+    unique_words: list[int]
+    average_response_time: list[int]
+    language_complexity: list[int]
+    sentiment: list[dict[str, int]]
 
 #stats for the second page (parent)
 class SecondPageStats(BaseModel):
