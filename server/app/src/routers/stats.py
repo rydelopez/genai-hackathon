@@ -7,6 +7,8 @@ from fastapi import (
 )
 from celery import Celery
 
+from app.src.schema.stats import FirstPageStats
+from app.src.schema.stats import SecondPageStats
 
 REDIS_URL = os.environ.get("REDIS_URL")
 upload_folder = "/code/shared_data"
@@ -16,27 +18,12 @@ router = APIRouter()
 celery_app = Celery("main_celery_app", broker=REDIS_URL)
 
 
-@router.get("/stats/{account_id}")
-async def stats(account_id):
-
-    return {"account_id": account_id}
-
-
-@router.get("/stats/{account_id}/summary")
-async def stats_summary(account_id):
-
-    return {"account_id": account_id}
+@router.get("/stats/conversation/{conversation_id}", response_model=SecondPageStats)
+async def get_conversation_stats(conversation_id):
+    return {"avg_response_length": 0, "unique_length": 0, "response_time": 0}
 
 
-@router.get("/stats/{account_id}/history")
-async def stats_history(account_id):
-
-    return {"account_id": account_id}
-
-
-@router.post("/stats/{account_id}/documents")
-async def stats_documents(account_id):
-
-    return {"account_id": account_id}
-
+@router.get("/stats/conversation/{conversation_id}", response_model=SecondPageStats)
+async def get_conversation_stats(conversation_id):
+    return {"avg_response_length": 0, "unique_length": 0, "response_time": 0}
     
