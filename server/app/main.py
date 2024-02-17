@@ -11,7 +11,7 @@ from celery import Celery
 from app.src.routers import conversation
 from app.src.routers import stats
 from . import models
-from .database import SessionLocal, engine
+from app.database import SessionLocal, engine
 from app.src.routers import teacher
 
 OPENAI_API_KEY = os.environ.get("OPENAI_KEY")
