@@ -84,7 +84,14 @@ class ConversationHistory:
                 self.reset_conversation(parent_id)
 
     async def update_db(self, parent_id):
-        pass
+        # pls implement to upload data into database
+        metadata_key = f"metadata:{parent_id}"
+        metadata = await self.redis_client.get(metadata_key)
+        db.process.metadata(metadata)
+
+        conversation_key = f"conversation:{parent_id}"
+        conversation = await self.redis_client.get(conversation_key)
+        db.process.conversation(conversation)
     
     async def reset_conversation(self, parent_id):
         # reset conversation
