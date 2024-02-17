@@ -63,6 +63,7 @@ class ConversationHistory:
 
         if message_type == "user":
             metadata["num_questions"] += 1
+            metadata["num_sentences"] += len(message_contents.split(".")) - 1
             metadata["total_response_time"] += response_time
             cleaned_words = []
             for word in message_contents:
@@ -134,6 +135,7 @@ class ConversationHistory:
         metadata_key = f"metadata:{parent_id}"
         await self.redis_client.set(metadata_key, {
             "num_questions": 0,
+            "num_sentences": 0,
             "total_response_time": 0,
             "start_time": None,
             "last_time": None
